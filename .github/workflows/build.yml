@@ -18,7 +18,7 @@ jobs:
   # Each architecture is tested individually to ensure compatibility
   build-and-test:
     name: Build and Test (${{ matrix.platform }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: read
       packages: write
@@ -28,9 +28,12 @@ jobs:
     strategy:
       fail-fast: false  # Continue testing other architectures if one fails
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        include:
+          - platform: linux/amd64
+            runs-on: ubuntu-latest
+          - platform: linux/arm64
+            runs-on: ubuntu-latest-arm64
+
 
     steps:
       - name: Checkout repository
@@ -74,6 +77,8 @@ jobs:
       # Run comprehensive tests on the built image
       # This verifies that PostGIS functionality works correctly on this architecture
       - name: Test ${{ matrix.platform }} image
+        env:
+          DOCKER_PLATFORM: ${{ matrix.platform }}
         run: |
           echo "🧪 Testing PostGIS functionality on ${{ matrix.platform }}..."
           

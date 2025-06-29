@@ -4,6 +4,15 @@
 # This script verifies core functionality and confirms size optimizations
 set -e
 
+# Accept platform as environment variable for CI, or detect locally
+PLATFORM=${DOCKER_PLATFORM:-}
+if [ -z "$PLATFORM" ]; then
+    # Auto-detect platform if not specified (for local testing)
+    HOST_ARCH=$(docker version --format '{{.Server.Arch}}')
+    PLATFORM="linux/${HOST_ARCH}"
+fi
+
+
 # Generate unique container name using process ID to avoid conflicts with other test runs
 CONTAINER_NAME="postgis-test-$$"
 CLEANUP_DONE=false
@@ -32,6 +41,7 @@ echo "📦 Container name: $CONTAINER_NAME"
 # We use a named database to ensure PostGIS extensions get installed properly
 echo "🚀 Starting PostgreSQL container..."
 if ! docker run -d --name "$CONTAINER_NAME" \
+    --platform="$PLATFORM" \
     -e POSTGRES_PASSWORD=testpass \
     -e POSTGRES_DB=testdb \
     coolify-postgresql:latest; then
