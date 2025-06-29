@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
+    paths:
+      - 'Dockerfile'
+      - '*.sh'
+      - 'test-image.sh'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
