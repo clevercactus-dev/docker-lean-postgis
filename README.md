@@ -49,6 +49,21 @@ docker run -d \
   ghcr.io/clevercactus-dev/coolify-postgresql:latest
 ```
 
+### Available Tags
+
+The following tagging scheme is used for this image:
+
+| Tag                            | Description                                 |
+|--------------------------------|---------------------------------------------|
+| `latest`                       | Latest stable build from the main branch    |
+| `RELEASE.YYYY-MM-DDTHH-mm-ssZ` | Timestamped release builds from main branch |
+| `main-sha`                     | Specific commit from main branch            |
+| `branch-YYYY-MM-DDTHH-mm-ssZ`  | Timestamped builds from other branches      |
+| `branch-sha`                   | Specific commit from other branches         |
+
+All images are multi-architecture and will automatically use the appropriate version for your
+platform (AMD64 or ARM64).
+
 ### Environment Variables
 
 | Variable            | Description                    | Default                    |
