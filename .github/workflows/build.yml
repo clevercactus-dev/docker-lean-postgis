@@ -133,10 +133,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=RELEASE.{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable={{is_default_branch}}
-            type=raw,value={{branch}}-{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable={{is_not_default_branch}}
+            type=raw,value=RELEASE.{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value={{branch}}-{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable=${{ github.ref != 'refs/heads/main' }}
             type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       # Build and push the final multi-architecture image
       # This reuses the cached layers from the test builds above
