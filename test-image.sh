@@ -44,7 +44,7 @@ if ! docker run -d --name "$CONTAINER_NAME" \
     --platform="$PLATFORM" \
     -e POSTGRES_PASSWORD=testpass \
     -e POSTGRES_DB=testdb \
-    coolify-postgresql:latest; then
+    docker-lean-postgis:latest; then
     echo "❌ Failed to start container"
     exit 1
 fi
@@ -171,7 +171,7 @@ fi
 
 # Check the image size to verify we're meeting our size target
 echo "📏 Checking image size..."
-IMAGE_SIZE=$(docker images coolify-postgresql:latest --format "table {{.Size}}" | tail -n 1)
+IMAGE_SIZE=$(docker images docker-lean-postgis:latest --format "table {{.Size}}" | tail -n 1)
 echo "📦 Image size: $IMAGE_SIZE"
 
 # Manual cleanup (trap will also run, but that's OK)

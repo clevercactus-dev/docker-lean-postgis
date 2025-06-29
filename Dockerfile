@@ -92,7 +92,7 @@ ARG BASE_IMAGE
 
 LABEL maintainer="Clever Cactus" \
       org.opencontainers.image.description="Lean PostGIS ${POSTGIS_VERSION} spatial database extension (optimized for ARM64)" \
-      org.opencontainers.image.source="https://github.com/clevercactus-dev/coolify-postgresql" \
+      org.opencontainers.image.source="https://github.com/clevercactus-dev/docker-lean-postgis" \
       org.opencontainers.image.version="${POSTGIS_VERSION}"
 
 ENV POSTGIS_VERSION=${POSTGIS_VERSION}

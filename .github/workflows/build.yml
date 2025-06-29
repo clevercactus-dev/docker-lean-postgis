@@ -78,7 +78,7 @@ jobs:
           push: false  # Don't push yet - we'll do multi-arch push later
           provenance: false # Disable provenance to avoid unknown/unknown
           sbom: false # Disable sbom to avoid unknown/unknown
-          tags: coolify-postgresql:test-${{ steps.platform.outputs.ARCH }}
+          tags: docker-lean-postgis:test-${{ steps.platform.outputs.ARCH }}
           cache-from: type=gha,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
           cache-to: type=gha,mode=max,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
 
@@ -91,7 +91,7 @@ jobs:
           echo "🧪 Testing PostGIS functionality on ${{ matrix.platform }}..."
           
           # Update the test script to use the architecture-specific tag
-          sed -i 's/coolify-postgresql:latest/coolify-postgresql:test-${{ steps.platform.outputs.ARCH }}/g' test-image.sh
+          sed -i 's/docker-lean-postgis:latest/docker-lean-postgis:test-${{ steps.platform.outputs.ARCH }}/g' test-image.sh
           
           # Make the test script executable and run it
           chmod +x ./test-image.sh

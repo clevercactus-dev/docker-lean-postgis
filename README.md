@@ -1,7 +1,7 @@
 # 🌍 Lean PostGIS Docker Image 🐘
 
-[![Build Status](https://github.com/clevercactus-dev/coolify-postgresql/actions/workflows/build.yml/badge.svg)](https://github.com/clevercactus-dev/coolify-postgresql/actions/workflows/build.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/clevercactus-dev/coolify-postgresql)](https://github.com/clevercactus-dev/coolify-postgresql/pkgs/container/coolify-postgresql)
+[![Build Status](https://github.com/clevercactus-dev/docker-lean-postgis/actions/workflows/build.yml/badge.svg)](https://github.com/clevercactus-dev/docker-lean-postgis/actions/workflows/build.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/clevercactus-dev/docker-lean-postgis)](https://github.com/clevercactus-dev/docker-lean-postgis/pkgs/container/docker-lean-postgis)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight, performance-optimized PostgreSQL image with PostGIS spatial extensions. Built on
@@ -38,7 +38,7 @@ Alpine Linux for minimal size while maintaining full spatial database functional
 
 ```bash
 # Pull the image
-docker pull ghcr.io/clevercactus-dev/coolify-postgresql:latest
+docker pull ghcr.io/clevercactus-dev/docker-lean-postgis:latest
 
 # Run a container
 docker run -d \
@@ -46,7 +46,7 @@ docker run -d \
   -e POSTGRES_PASSWORD=mysecretpassword \
   -e POSTGRES_DB=mydb \
   -p 5432:5432 \
-  ghcr.io/clevercactus-dev/coolify-postgresql:latest
+  ghcr.io/clevercactus-dev/docker-lean-postgis:latest
 ```
 
 ### Available Tags
@@ -82,7 +82,7 @@ the [official PostgreSQL Docker documentation](https://hub.docker.com/_/postgres
 version: '3'
 services:
   postgis:
-    image: ghcr.io/clevercactus-dev/coolify-postgresql:latest
+    image: ghcr.io/clevercactus-dev/docker-lean-postgis:latest
     environment:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: mydb
@@ -101,18 +101,18 @@ To build the image locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/clevercactus-dev/coolify-postgresql.git
-cd coolify-postgresql
+git clone https://github.com/clevercactus-dev/docker-lean-postgis.git
+cd docker-lean-postgis
 
 # Build the image
-docker build -t coolify-postgresql:latest .
+docker build -t docker-lean-postgis:latest .
 ```
 
 ### Building for Multiple Architectures
 
 ```bash
 docker buildx create --name mybuilder --use
-docker buildx build --platform linux/amd64,linux/arm64 -t coolify-postgresql:latest .
+docker buildx build --platform linux/amd64,linux/arm64 -t docker-lean-postgis:latest .
 ```
 
 ## 🧪 Testing
