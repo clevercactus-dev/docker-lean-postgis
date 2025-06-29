@@ -7,9 +7,11 @@ on:
     paths:
       - 'Dockerfile'
       - '*.sh'
-      - 'test-image.sh'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - '*.sh'
   workflow_dispatch:
 
 env:
