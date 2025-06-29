@@ -133,16 +133,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # RELEASE tags ONLY for main branch - production ready!
             type=raw,value=RELEASE.{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable={{is_default_branch}}
-            
-            # Development tags for feature branches
             type=raw,value={{branch}}-{{date 'YYYY-MM-DDTHH-mm-ss'}}Z,enable={{is_not_default_branch}}
-            
-            # SHA-based tag for exact commit identification
             type=sha,prefix={{branch}}-
-            
-            # Latest tag ONLY for main branch
             type=raw,value=latest,enable={{is_default_branch}}
 
       # Build and push the final multi-architecture image
