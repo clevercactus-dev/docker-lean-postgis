@@ -13,9 +13,88 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # === MULTI-ARCHITECTURE BUILD AND TEST ===
+  # This job builds and tests both AMD64 and ARM64 architectures
+  # Each architecture is tested individually to ensure compatibility
   build-and-test:
-    name: Build and Test
+    name: Build and Test (${{ matrix.platform }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    # Test matrix for both target architectures
+    # This ensures we catch architecture-specific issues before deployment
+    strategy:
+      fail-fast: false  # Continue testing other architectures if one fails
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up QEMU for cross-platform emulation
+      # This allows us to build and test ARM64 images on AMD64 runners
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      # Set up Docker Buildx for advanced build features
+      # Required for multi-platform builds and efficient caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Extract platform-specific information for tagging and identification
+      # This helps us track which architecture we're currently building/testing
+      - name: Extract platform info
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_OUTPUT
+          echo "ARCH=${platform##*/}" >> $GITHUB_OUTPUT
+
+      # Build and test the image for the current platform
+      # We use load: true to get the image locally for testing
+      # This is the ONLY build per architecture - no duplicates!
+      - name: Build and test ${{ matrix.platform }} image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          load: true  # Load image into local Docker for testing
+          push: false  # Don't push yet - we'll do multi-arch push later
+          tags: coolify-postgresql:test-${{ steps.platform.outputs.ARCH }}
+          cache-from: type=gha,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
+
+      # Run comprehensive tests on the built image
+      # This verifies that PostGIS functionality works correctly on this architecture
+      - name: Test ${{ matrix.platform }} image
+        run: |
+          echo "🧪 Testing PostGIS functionality on ${{ matrix.platform }}..."
+          
+          # Update the test script to use the architecture-specific tag
+          sed -i 's/coolify-postgresql:latest/coolify-postgresql:test-${{ steps.platform.outputs.ARCH }}/g' test-image.sh
+          
+          # Make the test script executable and run it
+          chmod +x ./test-image.sh
+          ./test-image.sh
+          
+          echo "✅ ${{ matrix.platform }} tests completed successfully!"
+
+  # === PUBLISH MULTI-ARCHITECTURE MANIFEST ===
+  # This job runs after successful testing of all architectures
+  # It creates and publishes a multi-architecture manifest
+  # This is the ONLY additional build - it reuses cached layers from testing
+  publish:
+    name: Publish Multi-Architecture Image
+    runs-on: ubuntu-latest
+    needs: build-and-test  # Only run if all architecture tests pass
+    if: github.event_name != 'pull_request'  # Skip publishing for PRs
     permissions:
       contents: read
       packages: write
@@ -24,26 +103,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up QEMU for multi-architecture builds
+      # Set up Docker Buildx for multi-platform manifest creation
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Set up QEMU for cross-platform support
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Set up Docker Buildx for multi-architecture builds
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
-
       # Login to GitHub Container Registry
-      - name: Log in to the Container registry
-        if: github.event_name != 'pull_request'
+      # Required for pushing images to the registry
+      - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Extract metadata for Docker
+      # Extract comprehensive metadata for Docker tags and labels
+      # This creates appropriate tags for different event types (push, tag, etc.)
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -54,41 +132,31 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=ref,event=branch
-            type=ref,event=pr
-            type=sha
+            type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # Build image for testing (single architecture for speed)
-      - name: Build test image
+      # Build and push the final multi-architecture image
+      # This reuses the cached layers from the test builds above
+      # So it's very fast - just creating the manifest and pushing
+      - name: Build and push multi-architecture image
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
-          tags: coolify-postgresql:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # Run tests
-      - name: Test image
-        run: |
-          chmod +x ./test-image.sh
-          ./test-image.sh
-
-      # Build and push multi-architecture image
-      - name: Build and push
-        if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/amd64,linux/arm64  # AMD64 first (most common), then ARM64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
+          # Reuse cached layers from the test builds - this makes it super fast!
+          cache-from: |
+            type=gha,scope=linux-amd64
+            type=gha,scope=linux-arm64
           cache-to: type=gha,mode=max
 
-      # Update README on Docker Hub
-      - name: Update README
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      # Output success information
+      # This helps with debugging and provides confirmation of successful deployment
+      - name: Image published successfully
         run: |
-          echo "README updated in GitHub Container Registry"
+          echo "🎉 Multi-architecture PostGIS image published successfully!"
+          echo "📦 Available architectures: AMD64, ARM64"
+          echo "🏷️  Tags: ${{ steps.meta.outputs.tags }}"
+          echo "📋 Users will automatically get the correct architecture for their platform"
