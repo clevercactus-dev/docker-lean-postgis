@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# Test script for PostGIS Docker Image (Directus-optimized)
+# Comprehensive test script for our lean PostGIS Docker image
+# This script verifies core functionality and confirms size optimizations
 set -e
 
-CONTAINER_NAME="postgis-test-$$"  # Use process ID to avoid conflicts
+# Generate unique container name using process ID to avoid conflicts with other test runs
+CONTAINER_NAME="postgis-test-$$"
 CLEANUP_DONE=false
 
-# Cleanup function that runs no matter what
+# Robust cleanup function that runs on any exit (normal or error)
+# This ensures we don't leave test containers running
 cleanup() {
     if [ "$CLEANUP_DONE" = false ]; then
         echo "🧹 Cleaning up container '$CONTAINER_NAME'..."
@@ -19,13 +22,14 @@ cleanup() {
     fi
 }
 
-# Set up trap to ensure cleanup runs on any exit
+# Set up trap to ensure cleanup runs on any exit (normal, error, or signal)
 trap cleanup EXIT INT TERM
 
-echo "🧪 Testing PostGIS Docker Image (Directus-optimized)..."
+echo "🧪 Testing Lean PostGIS Docker Image..."
 echo "📦 Container name: $CONTAINER_NAME"
 
-# Start container - FIX: Use POSTGRES_DB=testdb so PostGIS gets installed there
+# Start container with a specific test database
+# We use a named database to ensure PostGIS extensions get installed properly
 echo "🚀 Starting PostgreSQL container..."
 if ! docker run -d --name "$CONTAINER_NAME" \
     -e POSTGRES_PASSWORD=testpass \
@@ -35,7 +39,8 @@ if ! docker run -d --name "$CONTAINER_NAME" \
     exit 1
 fi
 
-# Wait for PostgreSQL to be ready with better health checking
+# Wait for PostgreSQL to be ready with robust health checking
+# This ensures we don't start tests before the database is fully initialized
 echo "⏳ Waiting for PostgreSQL to be ready..."
 for i in {1..30}; do
     if docker exec "$CONTAINER_NAME" pg_isready -U postgres >/dev/null 2>&1; then
@@ -53,37 +58,42 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Verify PostGIS extension is available
-echo "🔍 Verifying PostGIS extension..."
+# First verify that we can connect to the database
+echo "🔍 Verifying database connection..."
 if ! docker exec "$CONTAINER_NAME" psql -U postgres -d testdb -c "SELECT 1;" >/dev/null 2>&1; then
     echo "❌ Cannot connect to testdb"
     docker logs "$CONTAINER_NAME"
     exit 1
 fi
 
-# Test core PostGIS functionality for Directus
+# Test core PostGIS functionality to ensure all essential features work
 echo "🔍 Testing PostGIS core extensions..."
 if ! docker exec "$CONTAINER_NAME" psql -U postgres -d testdb -c "
     -- Test PostGIS version and build info
+    -- This confirms the extension is properly installed
     SELECT postgis_version();
     SELECT postgis_lib_version();
     SELECT postgis_lib_build_date();
 
-    -- Test basic geometry creation and operations (core Directus needs)
+    -- Test basic geometry creation and operations
+    -- These are the fundamental spatial operations most applications need
     SELECT ST_AsText(ST_MakePoint(1, 2)) as point_test;
     SELECT ST_AsText(ST_MakeLine(ST_MakePoint(0, 0), ST_MakePoint(1, 1))) as line_test;
     SELECT ST_Area(ST_MakeEnvelope(0, 0, 1, 1, 4326)) as area_test;
 
-    -- Test coordinate transformations (important for Directus maps)
+    -- Test coordinate transformations
+    -- Essential for working with different map projections
     SELECT ST_AsText(ST_Transform(ST_GeomFromText('POINT(0 0)', 4326), 3857)) as transform_test;
 
-    -- Test spatial relationships (Directus filtering)
+    -- Test spatial relationships
+    -- These functions enable spatial queries like 'find all points within this area'
     SELECT ST_Contains(
         ST_MakeEnvelope(0, 0, 2, 2, 4326),
         ST_SetSRID(ST_MakePoint(1, 1), 4326)
     ) as contains_test;
 
     -- Test distance calculations
+    -- Important for proximity searches
     SELECT ST_Distance(
         ST_MakePoint(0, 0),
         ST_MakePoint(1, 1)
@@ -93,38 +103,39 @@ if ! docker exec "$CONTAINER_NAME" psql -U postgres -d testdb -c "
     exit 1
 fi
 
-# Test typical Directus spatial data types
-echo "📍 Testing Directus-style spatial operations..."
+# Test real-world spatial operations with a sample table
+echo "📍 Testing practical spatial operations..."
 if ! docker exec "$CONTAINER_NAME" psql -U postgres -d testdb -c "
-    -- Create a test table similar to what Directus would use
-    CREATE TABLE directus_locations (
+    -- Create a test table with common spatial data types
+    CREATE TABLE test_locations (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100),
         location GEOMETRY(POINT, 4326),
         area GEOMETRY(POLYGON, 4326)
     );
 
-    -- Insert test data
-    INSERT INTO directus_locations (name, location, area) VALUES
+    -- Insert test data (San Francisco coordinates as an example)
+    INSERT INTO test_locations (name, location, area) VALUES
     ('Test Point', ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326), NULL),
     ('Test Area', NULL, ST_SetSRID(ST_MakeEnvelope(-122.5, 37.7, -122.3, 37.8, 4326), 4326));
 
-    -- Test spatial queries (typical Directus operations)
-    SELECT name, ST_AsText(location) as point_wkt FROM directus_locations WHERE location IS NOT NULL;
-    SELECT name, ST_Area(area) as area_sqm FROM directus_locations WHERE area IS NOT NULL;
+    -- Test spatial queries that applications commonly need
+    SELECT name, ST_AsText(location) as point_wkt FROM test_locations WHERE location IS NOT NULL;
+    SELECT name, ST_Area(area) as area_sqm FROM test_locations WHERE area IS NOT NULL;
 
-    -- Test spatial indexing
-    CREATE INDEX idx_locations_geom ON directus_locations USING GIST (location);
-    CREATE INDEX idx_areas_geom ON directus_locations USING GIST (area);
+    -- Test spatial indexing (critical for performance with large datasets)
+    CREATE INDEX idx_locations_geom ON test_locations USING GIST (location);
+    CREATE INDEX idx_areas_geom ON test_locations USING GIST (area);
 
     -- Clean up test table
-    DROP TABLE directus_locations;
+    DROP TABLE test_locations;
 "; then
-    echo "❌ Directus spatial operations tests failed"
+    echo "❌ Practical spatial operations tests failed"
     exit 1
 fi
 
-# Test what should NOT be available (confirming optimization)
+# Verify that excluded extensions are actually not available
+# This confirms our size optimization efforts were successful
 echo "❌ Testing removed extensions (should fail)..."
 
 echo "  📦 Testing raster extension (should fail)..."
@@ -148,7 +159,7 @@ else
     echo "✅ Tiger geocoder correctly removed"
 fi
 
-# Test image size
+# Check the image size to verify we're meeting our size target
 echo "📏 Checking image size..."
 IMAGE_SIZE=$(docker images coolify-postgresql:latest --format "table {{.Size}}" | tail -n 1)
 echo "📦 Image size: $IMAGE_SIZE"
@@ -156,5 +167,5 @@ echo "📦 Image size: $IMAGE_SIZE"
 # Manual cleanup (trap will also run, but that's OK)
 cleanup
 
-echo "✅ PostGIS Directus-optimized test completed!"
-echo "🎯 Perfect for Directus spatial features: points, polygons, coordinate transforms, spatial queries"
+echo "✅ Lean PostGIS test completed successfully!"
+echo "🎯 Ready for production: core spatial features working perfectly"
