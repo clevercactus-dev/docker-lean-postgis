@@ -50,7 +50,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: all
+          platforms: linux/amd64,linux/arm64
 
       # Set up Docker Buildx for advanced build features
       # Required for multi-platform builds and efficient caching
@@ -121,6 +121,8 @@ jobs:
       # Set up QEMU for cross-platform support
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
       # Login to GitHub Container Registry
       # Required for pushing images to the registry
