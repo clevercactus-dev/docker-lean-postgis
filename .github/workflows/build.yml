@@ -70,7 +70,7 @@ jobs:
       # We use load: true to get the image locally for testing
       # This is the ONLY build per architecture - no duplicates!
       - name: Build and test ${{ matrix.platform }} image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -148,7 +148,7 @@ jobs:
       # This reuses the cached layers from the test builds above
       # So it's very fast - just creating the manifest and pushing
       - name: Build and push multi-architecture image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64  # AMD64 first (most common), then ARM64
