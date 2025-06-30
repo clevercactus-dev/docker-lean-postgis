@@ -1,7 +1,7 @@
 # 🌍 Lean PostGIS Docker Image 🐘
 
 [![Build Status](https://github.com/clevercactus-dev/docker-lean-postgis/actions/workflows/build.yml/badge.svg)](https://github.com/clevercactus-dev/docker-lean-postgis/actions/workflows/build.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/clevercactus-dev/docker-lean-postgis)](https://github.com/clevercactus-dev/docker-lean-postgis/pkgs/container/docker-lean-postgis)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-docker--lean--postgis-blue?logo=docker)](https://github.com/clevercactus-dev/docker-lean-postgis/pkgs/container/docker-lean-postgis)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight, performance-optimized PostgreSQL image with PostGIS spatial extensions. Built on
