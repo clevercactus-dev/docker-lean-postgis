@@ -77,6 +77,9 @@ jobs:
           load: true  # Load image into local Docker for testing
           push: false  # Don't push yet - we'll do multi-arch push later
           tags: docker-lean-postgis:test-${{ steps.platform.outputs.ARCH }}
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
           cache-from: type=gha,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
           cache-to: type=gha,mode=max,scope=${{ steps.platform.outputs.PLATFORM_PAIR }}
 
@@ -154,9 +157,14 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64  # AMD64 first (most common), then ARM64
+          load: false
           push: true
+          provenance: mode=max
+          sbom: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ steps.meta.outputs.created }}
+            VCS_REF=${{ github.sha }}
           # Reuse cached layers from the test builds - this makes it super fast!
           cache-from: |
             type=gha,scope=linux-amd64

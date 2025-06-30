@@ -12,7 +12,7 @@ Alpine Linux for minimal size while maintaining full spatial database functional
 - 🗜️ **Lean Build**: ~329MB image size (vs 600MB+ for standard PostGIS)
 - 🚀 **Performance Focused**: Optimized for speed and resource efficiency
 - 🧩 **Core PostGIS**: Full support for geometry types and spatial functions
-- 🔄 **Multi-Architecture**: Optimized for ARM64, works great on AMD64 too
+- 🔄 **Multi-Architecture**: Native support for both ARM64 and AMD64 platforms
 - 🧪 **Thoroughly Tested**: Comprehensive test suite ensures reliability
 - 🔒 **Secure Base**: Built on official PostgreSQL Alpine images
 - 📦 **Latest Versions**: PostgreSQL 17 + PostGIS 3.5.3

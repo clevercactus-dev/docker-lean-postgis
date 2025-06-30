@@ -1,7 +1,9 @@
 
 # === VARIABLES (defined once) ===
 # Using the latest PostgreSQL 17 Alpine image for minimal size
-ARG BASE_IMAGE=postgres:17-alpine3.22
+ARG BASE_IMAGE=postgres:17.5-alpine3.22
+# PostgreSQL version for the base image and compatibility checks
+ARG PG_VERSION=17.5
 # PostGIS 3.5.3 provides the spatial features we need while maintaining compatibility
 ARG POSTGIS_VERSION=3.5.3
 # SHA256 checksum ensures we're getting the exact source code we expect
@@ -89,11 +91,16 @@ FROM ${BASE_IMAGE}
 # Re-import build args into final stage
 ARG POSTGIS_VERSION
 ARG BASE_IMAGE
+ARG PG_VERSION
+ARG BUILD_DATE
+ARG VCS_REF
 
 LABEL maintainer="Clever Cactus" \
-      org.opencontainers.image.description="Lean PostGIS ${POSTGIS_VERSION} spatial database extension (optimized for ARM64)" \
+      org.opencontainers.image.description="Lean PostGIS ${POSTGIS_VERSION} spatial database extension on PostgreSQL ${PG_VERSION} (multi-architecture: AMD64/ARM64)" \
       org.opencontainers.image.source="https://github.com/clevercactus-dev/docker-lean-postgis" \
-      org.opencontainers.image.version="${POSTGIS_VERSION}"
+      org.opencontainers.image.version="${POSTGIS_VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}"
 
 ENV POSTGIS_VERSION=${POSTGIS_VERSION}
 
