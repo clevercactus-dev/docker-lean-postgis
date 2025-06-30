@@ -149,7 +149,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
         env:
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
       # Build and push the final multi-architecture image
       # This reuses the cached layers from the test builds above
@@ -164,7 +164,8 @@ jobs:
           provenance: mode=max
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
-          annotations: ${{ steps.meta.annotations }}
+          labels: ${{ steps.meta.outputs.labelsannotations }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
             BUILD_DATE=${{ steps.meta.outputs.created }}
             VCS_REF=${{ github.sha }}
