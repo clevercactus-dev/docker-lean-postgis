@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up QEMU for cross-platform emulation
       # This allows us to build and test ARM64 images on AMD64 runners
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Docker Buildx for multi-platform manifest creation
       - name: Set up Docker Buildx
