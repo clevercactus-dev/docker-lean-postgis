@@ -1,13 +1,13 @@
 
 # === VARIABLES (defined once) ===
-# Using the latest PostgreSQL 17 Alpine image for minimal size
-ARG BASE_IMAGE=postgres:17.5-alpine3.22
+# Using the latest PostgreSQL 18 Alpine image for minimal size
+ARG BASE_IMAGE=postgres:18.2-alpine3.23
 # PostgreSQL version for the base image and compatibility checks
-ARG PG_VERSION=17.5
-# PostGIS 3.5.3 provides the spatial features we need while maintaining compatibility
-ARG POSTGIS_VERSION=3.5.3
+ARG PG_VERSION=18.2
+# PostGIS 3.6.2 provides the spatial features we need while maintaining compatibility
+ARG POSTGIS_VERSION=3.6.2
 # SHA256 checksum ensures we're getting the exact source code we expect
-ARG POSTGIS_SHA256=44222ed2b8f742ffc1ceb429b09ebb484c7880f9ba27bf7b6b197346cdd25437
+ARG POSTGIS_SHA256=607a4d21c017e5283e15d2d977c9b7f575ddfc672afdee81fc84a2d823db4ba5
 
 # === BUILD STAGE ===
 # Multi-stage build keeps the final image lean by excluding build tools

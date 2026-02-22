@@ -15,7 +15,7 @@ Alpine Linux for minimal size while maintaining full spatial database functional
 - 🔄 **Multi-Architecture**: Native support for both ARM64 and AMD64 platforms
 - 🧪 **Thoroughly Tested**: Comprehensive test suite ensures reliability
 - 🔒 **Secure Base**: Built on official PostgreSQL Alpine images
-- 📦 **Latest Versions**: PostgreSQL 17 + PostGIS 3.5.3
+- 📦 **Latest Versions**: PostgreSQL 18 + PostGIS 3.6.2
 
 ### What's Included
 
@@ -66,34 +66,87 @@ platform (AMD64 or ARM64).
 
 ### Environment Variables
 
-| Variable            | Description                    | Default                    |
-|---------------------|--------------------------------|----------------------------|
-| `POSTGRES_PASSWORD` | PostgreSQL password (required) | -                          |
-| `POSTGRES_USER`     | PostgreSQL username            | `postgres`                 |
-| `POSTGRES_DB`       | Database name                  | `postgres`                 |
-| `PGDATA`            | Data directory                 | `/var/lib/postgresql/data` |
+| Variable            | Description                    | Default                         |
+|---------------------|--------------------------------|---------------------------------|
+| `POSTGRES_PASSWORD` | PostgreSQL password (required) | -                               |
+| `POSTGRES_USER`     | PostgreSQL username            | `postgres`                      |
+| `POSTGRES_DB`       | Database name                  | `postgres`                      |
+| `PGDATA`            | Data directory                 | `/var/lib/postgresql/18/docker` |
 
 All standard PostgreSQL environment variables are supported. See
 the [official PostgreSQL Docker documentation](https://hub.docker.com/_/postgres) for more details.
 
+> **Note:** Starting with PostgreSQL 18, the PGDATA path is now version-specific to enable easier
+> major version upgrades using `pg_upgrade --link`.
+
 ### Using with Docker Compose
 
 ```yaml
-version: '3'
+services:
+   postgis:
+      image: ghcr.io/clevercactus-dev/docker-lean-postgis:latest
+      environment:
+         POSTGRES_PASSWORD: mysecretpassword
+         POSTGRES_DB: mydb
+      ports:
+         - "5432:5432"
+      volumes:
+         - postgis-data:/var/lib/postgresql
+
+volumes:
+   postgis-data:
+```
+
+## 🔄 Migrating from PostgreSQL 17 to 18
+
+PostgreSQL 18 introduces a breaking change in the data directory structure. If you're upgrading from
+a previous version of this image (PostgreSQL 17), you have two options:
+
+### Option 1: Use the Old PGDATA Path (Backwards Compatible)
+
+Keep using your existing volumes by explicitly setting the PGDATA environment variable:
+
+```yaml
 services:
   postgis:
     image: ghcr.io/clevercactus-dev/docker-lean-postgis:latest
     environment:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: mydb
+      PGDATA: /var/lib/postgresql/data  # Use old location
     ports:
       - "5432:5432"
     volumes:
-      - postgis-data:/var/lib/postgresql/data
+      - postgis-data:/var/lib/postgresql/data  # Old mount point
 
 volumes:
   postgis-data:
 ```
+
+### Option 2: Migrate to the New Structure (Recommended)
+
+For new deployments or when you want to benefit from easier future upgrades:
+
+1. **Backup your existing data:**
+   ```bash
+   docker exec your-container pg_dumpall -U postgres > backup.sql
+   ```
+
+2. **Update your docker-compose.yml to use the new volume mount:**
+   ```yaml
+   volumes:
+     - postgis-data:/var/lib/postgresql  # New mount point
+   ```
+
+3. **Start the new container and restore:**
+   ```bash
+   docker-compose up -d
+   docker exec -i your-container psql -U postgres < backup.sql
+   ```
+
+> **Why this change?** The new versioned PGDATA path (`/var/lib/postgresql/18/docker`) enables
+> faster major version upgrades using `pg_upgrade --link` by keeping data directories separate per
+> version.
 
 ## 🔨 Building
 
