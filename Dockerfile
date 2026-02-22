@@ -70,7 +70,8 @@ RUN set -eux \
         --without-gui \
         --without-raster \
         --without-topology \
-    && make -j$(nproc) \
+    # Use single-threaded make to avoid race conditions with LTO on some platforms
+    && make \
     && make install \
     \
     # Quick sanity test to ensure core PostGIS functionality works
