@@ -48,7 +48,7 @@ jobs:
       # Set up QEMU for cross-platform emulation
       # This allows us to build and test ARM64 images on AMD64 runners
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: linux/amd64,linux/arm64
 
@@ -123,7 +123,7 @@ jobs:
 
       # Set up QEMU for cross-platform support
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: linux/amd64,linux/arm64
 
